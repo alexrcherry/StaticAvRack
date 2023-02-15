@@ -52,6 +52,6 @@ def do_tasks_init(sys):
     do_write_task_6.do_channels.add_do_chan(ni_9485_1_dev.name+'/port0/line6', line_grouping=ni.constants.LineGrouping.CHAN_PER_LINE)
     do_write_task_7.do_channels.add_do_chan(ni_9485_1_dev.name+'/port0/line7', line_grouping=ni.constants.LineGrouping.CHAN_PER_LINE)
 
-    do_write_task_8.do_channels.add_do_chan(ni_9485_2_dev.name+'/port0/line0', line_grouping=ni.constants.LineGrouping.CHAN_PER_LINE)
+    do_write_task_8.do_channels.add_do_chan(ni_9485_2_dev.name+'/port0/line4', line_grouping=ni.constants.LineGrouping.CHAN_PER_LINE)
 
     return [do_write_task_0, do_write_task_1, do_write_task_2, do_write_task_3, do_write_task_4, do_write_task_5, do_write_task_6, do_write_task_7, do_write_task_8]

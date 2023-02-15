@@ -34,10 +34,10 @@ ai_output = np.zeros([6, 100], dtype=np.float64)
 valve_state = [0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0]
 
 #create lists for graphs
-he = [];
-he_supply = []
-pnu = []
-pnu_supply = []
+he = [0]*1000
+he_supply = [0]*1000
+pnu = [0]*1000
+pnu_supply = [0]*1000
 
 # initialize and start analog input task, for all four PT channels in pneumatics box
 [ai_reader, ai_read_task] = mod_setup.ai_task_init(sys)
@@ -62,11 +62,9 @@ ai_thread.start()
 sys = ni.system.System.local()
 task_list = do_tasks_init(sys)
 
-#create plot
-style.use('fivethirtyeight')
+import numpy as np
+from matplotlib import pyplot as plt
 
-fig = plt.figure()
-ax1 = fig.add_subplot(1,1,1)
 
 #button functions
 def S1O():
@@ -231,6 +229,10 @@ def S14O():
     valve_state[6] = 0
     valve_state[7] = 0
 
+plt.axis()
+plt.ion()
+plt.show()
+    
 
 def update_vals():
 
@@ -240,22 +242,28 @@ def update_vals():
     pnu.append(round(sum(ai_comm.pressure_output[2])/len(ai_comm.pressure_output[2]), 1))
     pnu_supply.append(round(sum(ai_comm.pressure_output[0])/len(ai_comm.pressure_output[0]), 1))
     #remove first value from list if list is at length
-    if (len(he) > 100):
+    if (len(he) > 1000):
         he.pop(0)
         he_supply.pop(0)
         pnu.pop(0)
         pnu_supply.pop(0)
-
+    #   
     val0 = 'HE: ' + str(he[-1]) + 'psi'
     val1 = 'HE Supply: ' + str(he_supply[-1]) + 'psi'
     val2 = 'Pneumatics: ' + str(pnu[-1]) + 'psi'
     val3 = 'Pneumatics Supply: ' + str(pnu_supply[-1]) + 'psi'
     val4 = round(sum(ai_comm.pressure_output[4])/len(ai_comm.pressure_output[4]), 1)
-    val5 = 'lox' + str(round(sum(ai_comm.pressure_output[5])/len(ai_comm.pressure_output[5]), 1))
-    if val4 > 0:
-        val4 = 'Continuity'
+
+    if val4 <= 0:
+        val4 = 'Continuity:' + str(val4)
     else:
-        val4 = 'No Continuity'
+        val4 = 'No Continuity:' + str(val4)
+        
+    plt.clf()
+    plt.plot(range(len(he)), he)
+    plt.draw()
+    #plt.pause(0.001)
+    
 
     time_val = datetime.datetime.now().strftime("Time: %H:%M:%S")
     label0.config(text=val0)
@@ -263,7 +271,7 @@ def update_vals():
     label2.config(text=val2)
     label3.config(text=val3)
     label4.config(text=val4)
-    label5.config(text=val5)
+   
     time_lab.config(text=time_val)
 
     if valve_state[0] == 1:
@@ -347,8 +355,6 @@ label3.place(x=1600,y=70)
 label4 = Label(tk)
 label4.place(x=1000,y=140)
 
-label5 = Label(tk)
-label5.place(x=1000,y=240)
 update_vals()
 
 
