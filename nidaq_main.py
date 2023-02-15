@@ -232,7 +232,13 @@ def S14O():
 plt.axis()
 plt.ion()
 plt.show()
-    
+plt.xlabel("Time (Sec)")
+plt.ylabel("Pressure (Psi)")
+plt.title("Ground Systems Pressure")
+update_rate = 100
+time_list = np.arange(-len(he)/(1/(update_rate/1000)))
+print(time_list[0])
+print(time_list[-1])
 
 def update_vals():
 
@@ -247,7 +253,7 @@ def update_vals():
         he_supply.pop(0)
         pnu.pop(0)
         pnu_supply.pop(0)
-    #   
+    #
     val0 = 'HE: ' + str(he[-1]) + 'psi'
     val1 = 'HE Supply: ' + str(he_supply[-1]) + 'psi'
     val2 = 'Pneumatics: ' + str(pnu[-1]) + 'psi'
@@ -258,12 +264,16 @@ def update_vals():
         val4 = 'Continuity:' + str(val4)
     else:
         val4 = 'No Continuity:' + str(val4)
-        
+
+
     plt.clf()
     plt.plot(range(len(he)), he)
+    plt.plot(range(len(he_supply)), he_supply)
+    plt.plot(range(len(pnu)), pnu)
+    plt.plot(range(len(pnu_supply)), pnu_supply)
     plt.draw()
     #plt.pause(0.001)
-    
+
 
     time_val = datetime.datetime.now().strftime("Time: %H:%M:%S")
     label0.config(text=val0)
@@ -271,7 +281,7 @@ def update_vals():
     label2.config(text=val2)
     label3.config(text=val3)
     label4.config(text=val4)
-   
+
     time_lab.config(text=time_val)
 
     if valve_state[0] == 1:
@@ -314,7 +324,7 @@ def update_vals():
     else:
         myCanvas.itemconfig(ind_7, fill = 'red')
 
-    tk.after(100, update_vals)
+    tk.after(update_rate, update_vals)
 
 
 tk = tk.Tk()
