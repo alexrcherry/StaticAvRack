@@ -249,7 +249,7 @@ def update_vals():
     int_val = (sum(ai_comm.pressure_output[7])/len(ai_comm.pressure_output[7]))-(sum(ai_comm.pressure_output[6])/len(ai_comm.pressure_output[6]))
     int_val = int_val*83333.33333-4263.33333
     # load_cell.append((int_val + sum(load_cell[-19:]))/20)
-    load_cell.append((int_val + sum(load_cell[-19:]))/20)
+    load_cell.append(int_val)
     #remove first value from list if list is at length
     if (len(he) > 1000):
         he.pop(0)
