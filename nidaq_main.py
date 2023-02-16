@@ -29,15 +29,16 @@ sys = mod_setup.sys_init()
 # create analog voltage input queue
 ai_queue = Queue()
 # create empty analog voltage array to be filled
-ai_output = np.zeros([6, 100], dtype=np.float64)
+ai_output = np.zeros([8, 100], dtype=np.float64)
 # create empty list for valve states
-valve_state = [0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0]
+valve_state = [0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0]
 
 #create lists for graphs
 he = [0]*1000
 he_supply = [0]*1000
 pnu = [0]*1000
 pnu_supply = [0]*1000
+load_cell = [0]*1000
 
 # initialize and start analog input task, for all four PT channels in pneumatics box
 [ai_reader, ai_read_task] = mod_setup.ai_task_init(sys)
@@ -117,13 +118,13 @@ def S5C():
     valve_state[4] = 1
 
 
-def S6O():
-    close_no_valve(task_list[5])
+def S6O():                             #HE vent
+    open_no_valve(task_list[5])
     valve_state[5] = 1
 
 
 def S6C():
-    open_no_valve(task_list[5])
+    close_no_valve(task_list[5])
     valve_state[5] = 0
 
 
@@ -229,49 +230,68 @@ def S14O():
     valve_state[6] = 0
     valve_state[7] = 0
 
-plt.axis()
+
 plt.ion()
 plt.show()
-plt.xlabel("Time (Sec)")
-plt.ylabel("Pressure (Psi)")
-plt.title("Ground Systems Pressure")
-update_rate = 100
+
+update_rate = 10
 time_list = np.arange(-len(he)/(1/(update_rate/1000)))
-print(time_list[0])
-print(time_list[-1])
+#print(time_list[0])
+#print(time_list[-1])
 
 def update_vals():
 
     #add values to the lists
-    he.append(round(sum(ai_comm.pressure_output[1])/len(ai_comm.pressure_output[1]), 1))
-    he_supply.append(round(sum(ai_comm.pressure_output[3])/len(ai_comm.pressure_output[3]), 1))
-    pnu.append(round(sum(ai_comm.pressure_output[2])/len(ai_comm.pressure_output[2]), 1))
-    pnu_supply.append(round(sum(ai_comm.pressure_output[0])/len(ai_comm.pressure_output[0]), 1))
+    he.append(round((((sum(ai_comm.pressure_output[1])/len(ai_comm.pressure_output[1]))+ sum(he[-9:]))/10), 1))
+    he_supply.append(round((((sum(ai_comm.pressure_output[3])/len(ai_comm.pressure_output[3]))+ sum(he_supply[-9:]))/10), 1))
+    pnu.append(round((((sum(ai_comm.pressure_output[2])/len(ai_comm.pressure_output[2]))+ sum(pnu[-9:]))/10), 1))
+    pnu_supply.append(round((((sum(ai_comm.pressure_output[0])/len(ai_comm.pressure_output[0]))+ sum(pnu_supply[-9:]))/10), 1))
+    int_val = (sum(ai_comm.pressure_output[7])/len(ai_comm.pressure_output[7]))-(sum(ai_comm.pressure_output[6])/len(ai_comm.pressure_output[6]))
+    int_val = int_val*83333.33333-4263.33333
+    # load_cell.append((int_val + sum(load_cell[-19:]))/20)
+    load_cell.append((int_val + sum(load_cell[-19:]))/20)
     #remove first value from list if list is at length
     if (len(he) > 1000):
         he.pop(0)
         he_supply.pop(0)
         pnu.pop(0)
         pnu_supply.pop(0)
+        load_cell.pop(0)
     #
     val0 = 'HE: ' + str(he[-1]) + 'psi'
     val1 = 'HE Supply: ' + str(he_supply[-1]) + 'psi'
     val2 = 'Pneumatics: ' + str(pnu[-1]) + 'psi'
     val3 = 'Pneumatics Supply: ' + str(pnu_supply[-1]) + 'psi'
     val4 = round(sum(ai_comm.pressure_output[4])/len(ai_comm.pressure_output[4]), 1)
+    val5 = round(sum(ai_comm.pressure_output[5])/len(ai_comm.pressure_output[5]), 1)
+    load_cell_1 = 'sig+:' + str(round(sum(ai_comm.pressure_output[6])/len(ai_comm.pressure_output[6]), 6))
+    load_cell_2 = 'sig-:' + str(round(sum(ai_comm.pressure_output[7])/len(ai_comm.pressure_output[7]), 6))
 
-    if val4 <= 0:
-        val4 = 'Continuity:' + str(val4)
+
+    if val4 > 3:
+        val4 = 'Ematch: No Continuity:' + str(val4)
     else:
-        val4 = 'No Continuity:' + str(val4)
+        val4 = 'Ematch: Continuity:' + str(val4)
 
+    if val5 > 3:
+        val5 = 'Breakwire: No Continuity:' + str(val5)
+    else:
+        val5 = 'Breakwire: Continuity:' + str(val5)
 
     plt.clf()
-    plt.plot(range(len(he)), he)
-    plt.plot(range(len(he_supply)), he_supply)
-    plt.plot(range(len(pnu)), pnu)
-    plt.plot(range(len(pnu_supply)), pnu_supply)
+    # plt.plot(range(len(he)), he, label = 'He')
+    # plt.plot(range(len(he_supply)), he_supply, label = 'He Supply')
+    # plt.plot(range(len(pnu)), pnu, label = 'Pneumatics')
+    # plt.plot(range(len(pnu_supply)), pnu_supply, label = 'Pneumatics Supply')
+    plt.plot(range(len(load_cell)), load_cell, label = 'Load Cell')
+    plt.xlabel("Time (Sec)")
+    plt.ylabel("Pressure (Psi)")
+    plt.title("Ground Systems Pressure")
+    plt.legend()
     plt.draw()
+
+   
+
     #plt.pause(0.001)
 
 
@@ -281,6 +301,10 @@ def update_vals():
     label2.config(text=val2)
     label3.config(text=val3)
     label4.config(text=val4)
+
+    label5.config(text=val5)
+    label6.config(text=load_cell_1)
+    label7.config(text=load_cell_2)
 
     time_lab.config(text=time_val)
 
@@ -304,7 +328,7 @@ def update_vals():
     else:
         myCanvas.itemconfig(ind_3, fill = 'red')
 
-    if valve_state[4] == 1:
+    if valve_state[4] == 0:
         myCanvas.itemconfig(ind_4, fill = 'green')
     else:
         myCanvas.itemconfig(ind_4, fill = 'red')
@@ -338,9 +362,9 @@ myCanvas.place(x=0,y=0)
 def create_circle(x,y,r,canvas, **kwargs):
 	return canvas.create_oval(x-r,y-r,x+r, y+r, **kwargs)
 #indicators
-ind_0 = create_circle(95, 78, 4, myCanvas, fill='blue')
-ind_1 = create_circle(295, 78, 4, myCanvas, fill='blue')
-ind_2 = create_circle(495, 78, 4, myCanvas, fill='blue')
+ind_0 = create_circle(95, 78, 4, myCanvas, fill= 'blue')
+ind_1 = create_circle(295, 78, 4, myCanvas, fill= 'blue')
+ind_2 = create_circle(495, 78, 4, myCanvas, fill= 'blue')
 ind_3 = create_circle(695, 78, 4, myCanvas, fill = 'blue')
 ind_4 = create_circle(95, 258, 4, myCanvas, fill = 'blue')
 ind_5 = create_circle(295, 258, 4, myCanvas, fill = 'blue')
@@ -364,6 +388,15 @@ label3.place(x=1600,y=70)
 
 label4 = Label(tk)
 label4.place(x=1000,y=140)
+
+label5 = Label(tk)
+label5.place(x=1200,y=140)
+
+label6 = Label(tk)
+label6.place(x=1400,y=140)
+
+label7 = Label(tk)
+label7.place(x=1600,y=140)
 
 update_vals()
 
@@ -392,10 +425,10 @@ b7 = Button(tk, text="Open",width=20,height=3,command=S4O).place(x=700, y=100)
 b8 = Button(tk, text="Closed", width=20,height=3,command=S4C).place(x=700, y=170)
 
 #second row
-text = Label(tk, text="OB PNU")
+text = Label(tk, text="Onboard Vents")
 text.place(x=100,y=250)
-b10 = Button(tk, text="Open", width=20,height=3,command=S5C).place(x=100, y=280)
-b9 = Button(tk, text="Closed",width=20,height=3, command=S5O).place(x=100, y=350)
+b10 = Button(tk, text="Open", width=20,height=3,command=S5O).place(x=100, y=280)
+b9 = Button(tk, text="Closed",width=20,height=3, command=S5C).place(x=100, y=350)
 
 text = Label(tk, text="HE VENT")
 text.place(x=300,y=250)

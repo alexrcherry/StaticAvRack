@@ -19,7 +19,7 @@ def ai_task_init(sys):
 
     ni_9205_dev = sys.devices['cDAQ1Mod7']
     ai_read_task = ni.Task()
-    ai_read_task.ai_channels.add_ai_voltage_chan(ni_9205_dev.name+'/ai0:5', terminal_config=ni.constants.TerminalConfiguration.RSE, min_val=1.996, max_val=9.980)
+    ai_read_task.ai_channels.add_ai_voltage_chan(ni_9205_dev.name+'/ai0:7', terminal_config=ni.constants.TerminalConfiguration.RSE, min_val=-10, max_val=10)
     ai_read_task.timing.cfg_samp_clk_timing(1000, source="", sample_mode=ni.constants.AcquisitionType.CONTINUOUS)
     ai_reader = AnalogMultiChannelReader(ai_read_task.in_stream)
     ai_read_task.start()

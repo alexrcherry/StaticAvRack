@@ -11,11 +11,11 @@ def ai_read(run, queue, reader, output, task, csv_file_path):
 	#global cont
 	while True:
 		reader.read_many_sample(output, number_of_samples_per_channel=100)
-		output = np.around(output, 6)
+		
 		#cont = output[4]
 		#lox = output[5]
 
-		out_psi = pressure_output = np.around(voltz_to_psi(output),6)
+		out_psi = pressure_output = voltz_to_psi(output)
 		queue.put((out_psi))
 		to_csv(out_psi, csv_file_path)
 		# check_cont(queue_cont, task, logger_cont, csv_file_path_cont)
@@ -33,25 +33,17 @@ def voltz_to_psi(output):
 	pnu_post_out_raw = output[2]  # ai2: pneumatics pressure, 0-200psi
 	pnu_pre_out_raw = output[3]	  # ai3: pneumatics supply pressure, 0-3000psi
 	cont_voltage = output[4]
-	lox_voltage = output[5]
+	breakwire = output[5]
+	load_cell_0 = output[6]
+	load_cell_1 = output[7]
 
-	he_post_out_psi = (5000/8)*(he_post_out_raw-2)   #5000
-	he_pre_out_psi = (7500/8)*(he_pre_out_raw-2)     #7500
+	he_post_out_psi = 1840.1*(he_post_out_raw)-3920.2   #5000
+	he_pre_out_psi = 2240.7*(he_pre_out_raw)-4461.8     #7500
 	pnu_post_out_psi = (200/8)*(pnu_post_out_raw-2)  #200
-	pnu_pre_out_psi = (3000/8)*(pnu_pre_out_raw-2)   #3000
+	pnu_pre_out_psi = 375*(pnu_pre_out_raw)-750   #3000
 
-	out_psi = np.vstack((he_post_out_psi, he_pre_out_psi, pnu_post_out_psi, pnu_pre_out_psi, cont_voltage, lox_voltage))
+	out_psi = np.vstack((he_post_out_psi, he_pre_out_psi, pnu_post_out_psi, pnu_pre_out_psi, cont_voltage, breakwire, load_cell_0, load_cell_1))
 	return out_psi
-
-def check_cont(queue, task, logger, csv_fp):
-	cont = task.in_stream.open_current_loop_chans_exist()
-	if cont == False:
-		out = 'GOOD CONTINUITY'
-	else:
-		out = 'NO CONTINUITY'
-	queue.put(out)
-	logger.info(out)
-	csv_write(out, csv_fp)
 
 
 def to_csv(output, csv_file_path):
